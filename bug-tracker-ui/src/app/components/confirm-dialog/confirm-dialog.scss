@@ -1,0 +1,84 @@
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.dialog-box {
+  width: 100%;
+  max-width: 420px;
+  padding: 28px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.dialog-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: #ffebee;
+  color: #c62828;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.dialog-box h2 {
+  margin: 0 0 12px;
+  color: #222222;
+  font-size: 22px;
+}
+
+.dialog-box p {
+  margin: 0;
+  color: #666666;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.dialog-actions button {
+  min-width: 100px;
+  padding: 11px 18px;
+  border: 1px solid #dddddd;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.cancel-button {
+  background: #ffffff;
+  color: #333333;
+}
+
+.delete-button {
+  border-color: #c62828 !important;
+  background: #c62828;
+  color: #ffffff;
+}
+
+.cancel-button:hover {
+  background: #f5f5f5;
+}
+
+.delete-button:hover {
+  background: #a51f1f;
+}

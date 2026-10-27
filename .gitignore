@@ -1,0 +1,44 @@
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+application-local.properties
+application-prod.properties
+secrets.properties
+
+# Java / Spring Boot
+**/target/
+**/build/
+**/out/
+
+# Angular / Node.js
+**/node_modules/
+**/dist/
+**/.angular/
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+
+# Operating system
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Local database backups
+*.sql
+*.dump
+
+# Local application configuration
+**/src/main/resources/application.properties
+**/src/main/resources/application-local.properties
+**/src/main/resources/application-prod.properties
+
+# Local environment files
+.env
+.env.*
+!.env.example

@@ -1,0 +1,56 @@
+
+<section class="comments-section">
+  <h2>Comments ({{ comments.length }})</h2>
+
+  <form (ngSubmit)="addComment()">
+    <label for="comment-author">Your name</label>
+    <input
+      id="comment-author"
+      name="author"
+      [(ngModel)]="author"
+      required
+      maxlength="100"
+      placeholder="Enter your name"
+    />
+
+    <label for="comment-content">Comment</label>
+    <textarea
+      id="comment-content"
+      name="content"
+      [(ngModel)]="content"
+      required
+      maxlength="3000"
+      rows="4"
+      placeholder="Share an update or debugging information..."
+    ></textarea>
+
+    <button
+      type="submit"
+      [disabled]="saving || !author.trim() || !content.trim()"
+    >
+      {{ saving ? 'Adding...' : 'Add Comment' }}
+    </button>
+  </form>
+
+  @if (errorMessage) {
+    <p class="error-message">{{ errorMessage }}</p>
+  }
+
+  @if (loading) {
+    <p>Loading comments...</p>
+  } @else if (comments.length === 0) {
+    <p class="empty-message">No comments yet. Start the discussion.</p>
+  } @else {
+    <div class="comment-list">
+      @for (comment of comments; track comment.id) {
+        <article class="comment">
+          <div class="comment-header">
+            <strong>{{ comment.author }}</strong>
+            <time>{{ comment.createdAt | date:'medium' }}</time>
+          </div>
+          <p>{{ comment.content }}</p>
+        </article>
+      }
+    </div>
+  }
+</section>

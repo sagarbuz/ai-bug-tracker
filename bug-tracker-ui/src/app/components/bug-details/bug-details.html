@@ -1,0 +1,26 @@
+
+<div class="details-page">
+  <a routerLink="/" class="back-link">← Back to Dashboard</a>
+
+  @if (loading) {
+    <p>Loading bug details...</p>
+  } @else if (errorMessage) {
+    <p class="error-message">{{ errorMessage }}</p>
+  } @else if (bug) {
+    <section class="details-card">
+      <p class="bug-id">BUG #{{ bug.id }}</p>
+      <h1>{{ bug.title }}</h1>
+
+      <div class="metadata">
+        <span>Severity: <strong>{{ bug.severity }}</strong></span>
+        <span>Status: <strong>{{ bug.status }}</strong></span>
+      </div>
+
+      <h2>Description</h2>
+      <p class="description">{{ bug.description }}</p>
+    </section>
+
+    <app-bug-comments [bugId]="bug.id!" />
+    <app-bug-status-history [bugId]="bug.id!" />
+  }
+</div>

@@ -1,0 +1,36 @@
+
+<section class="history-section">
+  <h2>Status History</h2>
+
+  @if (loading) {
+    <p>Loading status history...</p>
+  } @else if (errorMessage) {
+    <p class="error-message">{{ errorMessage }}</p>
+  } @else if (history.length === 0) {
+    <p class="empty-message">
+      No status changes recorded yet.
+    </p>
+  } @else {
+    <div class="timeline">
+      @for (entry of history; track entry.id) {
+        <article class="timeline-entry">
+          <div class="timeline-dot"></div>
+
+          <div class="timeline-content">
+            <p class="status-change">
+              <span class="old-status">
+                {{ entry.previousStatus }}
+              </span>
+              <span class="arrow">→</span>
+              <span class="new-status">
+                {{ entry.newStatus }}
+              </span>
+            </p>
+
+            <time>{{ entry.changedAt | date:'medium' }}</time>
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>

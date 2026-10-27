@@ -1,0 +1,83 @@
+
+.history-section {
+  margin-top: 24px;
+  padding: 28px;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.history-section h2 {
+  margin-top: 0;
+  margin-bottom: 24px;
+  color: #222222;
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline-entry {
+  position: relative;
+  display: flex;
+  gap: 16px;
+  padding-bottom: 24px;
+}
+
+.timeline-entry:not(:last-child)::before {
+  position: absolute;
+  top: 18px;
+  bottom: 0;
+  left: 7px;
+  width: 2px;
+  background: #e5e5e5;
+  content: '';
+}
+
+.timeline-dot {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  margin-top: 4px;
+  border: 2px solid #b71c1c;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+.timeline-content {
+  flex: 1;
+}
+
+.status-change {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 8px;
+  font-weight: 600;
+}
+
+.old-status {
+  color: #666666;
+}
+
+.arrow {
+  color: #999999;
+}
+
+.new-status {
+  color: #b71c1c;
+}
+
+.timeline-content time,
+.empty-message {
+  color: #777777;
+  font-size: 13px;
+}
+
+.error-message {
+  color: #b71c1c;
+}

@@ -1,0 +1,397 @@
+
+<div class="app-layout">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-icon">B</span>
+      <span>Bug Tracker</span>
+    </div>
+
+    <p class="menu-label">WORKSPACE</p>
+
+    <nav>
+      <a class="nav-item active" href="#">
+        <span>▦</span> Dashboard
+      </a>
+      <a class="nav-item" href="#bugs">
+        <span>☷</span> All Bugs
+      </a>
+      <a class="nav-item" href="#ai">
+        <span>✧</span> AI Assistant
+      </a>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div class="avatar">D</div>
+      <div>
+        <strong>Developer</strong>
+        <small>Project Workspace</small>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <span>Workspace / Dashboard</span>
+      <span class="status-indicator">● System Online</span>
+    </header>
+
+    <section class="page-heading">
+      <div>
+        <h1>Bug Dashboard</h1>
+        <p>Track, manage, and resolve software issues.</p>
+      </div>
+
+      <button class="create-button" type="button" (click)="openCreateForm()">
+        + Create Bug
+      </button>
+    </section>
+
+    <section class="stats-grid">
+      <article class="stat-card">
+        <p>Total Bugs</p>
+        <h2>{{ totalBugs }}</h2>
+        <small>All reported issues</small>
+      </article>
+
+      <article class="stat-card">
+        <p>Open Bugs</p>
+        <h2>{{ openBugs }}</h2>
+        <small>Awaiting investigation</small>
+      </article>
+
+      <article class="stat-card">
+        <p>In Progress</p>
+        <h2>{{inProgressBugs}}</h2>
+        <small>Currently being fixed</small>
+      </article>
+
+      <article class="stat-card">
+        <p>Resolved</p>
+        <h2>{{resolvedBugs}}</h2>
+        <small>Successfully completed</small>
+      </article>
+
+      <div class="stat-card">
+        <h3>Unassigned Bugs</h3>
+        <p>{{ unassignedBugs }}</p>
+      </div>
+    </section>
+
+
+@if (showCreateForm) {
+  <section class="create-form-section">
+    <div class="section-heading">
+      <div>
+        <h2>{{ editingBugId !== null ? 'Edit Bug' : 'Create New Bug' }}</h2>
+        <p>Provide details about the issue you encountered.</p>
+      </div>
+
+      <button class="cancel-button" type="button" (click)="closeCreateForm()">
+        Cancel
+      </button>
+    </div>
+
+    <form [formGroup]="bugForm" (ngSubmit)="saveBug()">
+      <div class="form-field">
+        <label for="bugTitle">Bug Title</label>
+        <input
+          id="bugTitle"
+          type="text"
+          formControlName="title"
+          placeholder="e.g. Login button not working"
+        />
+
+        @if (bugForm.controls.title.touched && bugForm.controls.title.invalid) {
+          <small class="field-error">Please enter a bug title.</small>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="bugDescription">Description</label>
+        <textarea
+          id="bugDescription"
+          rows="4"
+          formControlName="description"
+          placeholder="Describe the issue and how to reproduce it"
+        ></textarea>
+
+        @if (bugForm.controls.description.touched && bugForm.controls.description.invalid) {
+          <small class="field-error">Please enter a description.</small>
+        }
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label for="bugSeverity">Severity</label>
+          <select id="bugSeverity" formControlName="severity">
+            <option value="LOW">Low</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="HIGH">High</option>
+            <option value="CRITICAL">Critical</option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label for="bugStatus">Status</label>
+          <select id="bugStatus" formControlName="status">
+            <option value="OPEN">Open</option>
+            <option value="IN_PROGRESS">In Progress</option>
+            <option value="RESOLVED">Resolved</option>
+          </select>
+        </div>
+
+
+        <div class="form-group">
+          <label for="assignee">Assign Developer</label>
+
+            <select id="assignee" formControlName="assignee">
+            <option value="">Unassigned</option>
+            <option value="Rahul">Rahul</option>
+            <option value="Priya">Priya</option>
+            <option value="Amit">Amit</option>
+            <option value="Sneha">Sneha</option>
+            </select>
+          </div>
+
+      </div>
+
+      @if (formError) {
+        <p class="field-error">{{ formError }}</p>
+      }
+
+      <button class="create-button" type="submit" [disabled]="saving">
+        {{ saving ? 'Saving...' : (editingBugId !== null ? 'Update Bug' : 'Save Bug') }}
+      </button>
+    </form>
+  </section>
+}
+
+
+    <section class="bugs-section" id="bugs">
+      <div class="section-heading">
+        <div>
+          <h2>Recent Bugs</h2>
+          <p>Review and manage reported issues.</p>
+        </div>
+        <span class="count-label">
+  {{ bugs.length }} {{ bugs.length === 1 ? 'issue' : 'issues' }}
+</span>
+      </div>
+<!-- Bug Search -->
+<div class="bug-search">
+  <label for="bugSearch">Search Bugs</label>
+
+  <input
+    id="bugSearch"
+    type="text"
+    placeholder="Search by bug ID, title, or description..."
+    [(ngModel)]="searchText"
+    (ngModelChange)="applyFilters()"
+  />
+</div>
+<!-- Bug Filters -->
+<div class="bug-filters">
+
+  <div class="filter-group">
+    <label for="statusFilter">Status</label>
+    <select
+      id="statusFilter"
+      [(ngModel)]="selectedStatus"
+      (ngModelChange)="applyFilters()">
+
+      <option value="">All Statuses</option>
+      <option value="OPEN">Open</option>
+      <option value="IN_PROGRESS">In Progress</option>
+      <option value="RESOLVED">Resolved</option>
+    </select>
+  </div>
+
+  <div class="filter-group">
+    <label for="severityFilter">Severity</label>
+    <select
+      id="severityFilter"
+      [(ngModel)]="selectedSeverity"
+      (ngModelChange)="applyFilters()">
+
+      <option value="">All Severities</option>
+      <option value="LOW">Low</option>
+      <option value="MEDIUM">Medium</option>
+      <option value="HIGH">High</option>
+      <option value="CRITICAL">Critical</option>
+    </select>
+  </div>
+
+  <div class="filter-group">
+    <label for="assigneeFilter">Assignee</label>
+    <select
+      id="assigneeFilter"
+      [(ngModel)]="selectedAssignee"
+      (ngModelChange)="applyFilters()">
+
+      <option value="">All Developers</option>
+      <option value="Rahul">Rahul</option>
+      <option value="Priya">Priya</option>
+      <option value="Amit">Amit</option>
+      <option value="Sneha">Sneha</option>
+    </select>
+  </div>
+
+  <button type="button" (click)="resetFilters()">
+    Reset Filters
+  </button>
+
+</div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>BUG</th>
+              <th>DESCRIPTION</th>
+              <th>SEVERITY</th>
+              <th>STATUS</th>
+              <th>ACTIONS</th>
+            </tr>
+          </thead>
+
+
+<tbody>
+  @if (loading) {
+    <tr>
+      <td colspan="5">Loading bugs...</td>
+    </tr>
+  } @else if (errorMessage) {
+    <tr>
+      <td colspan="5">{{ errorMessage }}</td>
+    </tr>
+  } @else if (bugs.length === 0) {
+    <tr>
+      <td colspan="5">No bugs reported yet.</td>
+    </tr>
+  } @else {
+    @for (bug of filteredBugs; track bug.id) {
+      <tr>
+        <td>
+          <a [routerLink]="['/bugs', bug.id]">
+            {{ bug.id }}
+          </a>
+        </td>
+        <td>{{ bug.description }}</td>
+        <td>
+          <span class="severity"
+                [class.high]="bug.severity === 'HIGH'">
+            {{ bug.severity }}
+          </span>
+        </td>
+        <td>
+          <span class="bug-status">{{ bug.status }}</span>
+        </td>
+        <td>
+          <button type="button" class="edit-button" (click)="editBug(bug)">
+            Edit
+          </button>
+          <button
+            type="button" (click)="openDeleteDialog(bug)" class="edit-button"
+>
+  Delete
+</button>
+        </td>
+      </tr>
+    }
+  }
+</tbody>
+
+        </table>
+      </div>
+    </section>
+
+
+<section class="ai-section" id="ai">
+  <div class="ai-icon">✧</div>
+
+  <div class="ai-content">
+    <h2>AI Bug Assistant</h2>
+    <p>
+      Describe a bug and let AI suggest its category,
+      severity, summary, and debugging steps.
+    </p>
+
+    <label for="aiDescription">Bug Description</label>
+
+    <textarea
+      id="aiDescription"
+      rows="4"
+      placeholder="Example: The application crashes when I click Submit..."
+      [(ngModel)]="aiDescription"
+    ></textarea>
+
+    <button
+      type="button"
+      class="create-button"
+      (click)="analyzeBugWithAI()"
+      [disabled]="aiLoading || !aiDescription.trim()"
+    >
+      {{ aiLoading ? 'Analyzing...' : 'Analyze with AI' }}
+    </button>
+
+    @if (aiError) {
+      <p class="field-error">{{ aiError }}</p>
+    }
+
+
+@if (aiAnalysis) {
+  <div class="ai-result">
+    <div class="ai-result-header">
+      <span class="result-icon">✦</span>
+      <div>
+        <h3>AI Analysis Result</h3>
+        <p>Review the suggested findings below.</p>
+      </div>
+    </div>
+
+    <div class="ai-result-grid">
+      <div class="ai-result-card">
+        <span class="result-label">CATEGORY</span>
+        <h4>{{ aiCategory || 'Not identified' }}</h4>
+      </div>
+
+      <div class="ai-result-card severity-card">
+        <span class="result-label">SUGGESTED SEVERITY</span>
+        <h4>{{ aiSeverity || 'Not identified' }}</h4>
+      </div>
+    </div>
+
+    <div class="ai-summary">
+      <h4>Summary</h4>
+      <p>{{ aiSummary || aiAnalysis }}</p>
+    </div>
+
+    @if (aiDebuggingSteps.length > 0) {
+      <div class="ai-debugging">
+        <h4>Suggested debugging steps</h4>
+
+        <ol>
+          @for (step of aiDebuggingSteps; track $index) {
+            <li>{{ step }}</li>
+          }
+        </ol>
+      </div>
+    }
+  </div>
+}
+
+  </div>
+</section>
+
+
+  </main>
+</div>
+@if (showDeleteDialog) {
+  <app-confirm-dialog
+    title="Delete Bug?"
+    message="Are you sure you want to delete this bug? This action cannot be undone."
+    (confirmed)="confirmDeleteBug()"
+    (cancelled)="closeDeleteDialog()"
+  />
+}
