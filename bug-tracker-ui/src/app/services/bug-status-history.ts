@@ -2,6 +2,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface BugStatusHistoryEntry {
   id: number;
@@ -17,7 +18,7 @@ export interface BugStatusHistoryEntry {
 export class BugStatusHistoryService {
   private http = inject(HttpClient);
 
-  private apiUrl = 'http://localhost:8080/api/bugs';
+  private apiUrl = `${environment.apiUrl}/api/bugs`;
 
   getHistory(bugId: number): Observable<BugStatusHistoryEntry[]> {
     return this.http.get<BugStatusHistoryEntry[]>(

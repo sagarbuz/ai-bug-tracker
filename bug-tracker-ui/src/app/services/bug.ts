@@ -2,6 +2,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface Bug {
   id?: number;
@@ -18,7 +19,7 @@ export interface Bug {
 export class BugService {
   private http = inject(HttpClient);
 
-  private apiUrl = 'http://localhost:8080/api/bugs';
+  private apiUrl = `${environment.apiUrl}/api/bugs`;
 
   getAllBugs(): Observable<Bug[]> {
     return this.http.get<Bug[]>(this.apiUrl);
