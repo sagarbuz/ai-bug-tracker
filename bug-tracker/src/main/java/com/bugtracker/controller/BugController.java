@@ -16,7 +16,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = {
+    "http://localhost:4200",
+    "https://ai-bug-tracker-ui.vercel.app"
+})
 @RestController
 @RequestMapping("/api/bugs")
 public class BugController {

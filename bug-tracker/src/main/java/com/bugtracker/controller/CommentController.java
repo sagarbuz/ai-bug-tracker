@@ -9,7 +9,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/bugs/{bugId}/comments")
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = {
+    "http://localhost:4200",
+    "https://ai-bug-tracker-ui.vercel.app"
+})
 public class CommentController {
 
     private final CommentService commentService;
