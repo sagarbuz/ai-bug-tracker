@@ -1,13 +1,25 @@
 
 import { Component, OnInit, signal } from '@angular/core';
-import { ReactiveFormsModule, FormBuilder, Validators, FormsModule } from '@angular/forms';
-import { Bug, BugService } from '../../services/bug';
-import { ConfirmDialog } from '../confirm-dialog/confirm-dialog';
+import {
+  ReactiveFormsModule,
+  FormBuilder,
+  Validators,
+  FormsModule
+} from '@angular/forms';
 import { RouterLink } from '@angular/router';
+
+import { Bug, BugService } from '../../services/bug';
 import { AiService } from '../../services/ai';
+import { ConfirmDialog } from '../confirm-dialog/confirm-dialog';
+
 @Component({
   selector: 'app-dashboard',
-  imports: [ConfirmDialog, ReactiveFormsModule, RouterLink,FormsModule],
+  imports: [
+    ConfirmDialog,
+    ReactiveFormsModule,
+    RouterLink,
+    FormsModule
+  ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
@@ -17,27 +29,38 @@ export class Dashboard implements OnInit {
   bugs: Bug[] = [];
   filteredBugs: Bug[] = [];
 
+  // AI properties
   aiDescription = '';
   aiAnalysis = '';
   aiLoading = false;
   aiError = '';
+
   aiCategory = '';
   aiSeverity = '';
   aiSummary = '';
   aiDebuggingSteps: string[] = [];
 
+  // Search and filters
   searchText = '';
   selectedStatus = '';
   selectedSeverity = '';
   selectedAssignee = '';
+
+  // Loading and error states
   loading = true;
   errorMessage = '';
 
+  // Create and edit form
   showCreateForm = false;
   saving = false;
   formError = '';
+  editingBugId: number | null = null;
 
   bugForm;
+
+  // Delete dialog
+  showDeleteDialog = false;
+  bugToDelete: Bug | null = null;
 
   constructor(
     private bugService: BugService,
@@ -57,9 +80,7 @@ export class Dashboard implements OnInit {
     this.loadBugs();
   }
 
-  showDeleteDialog = false;
-  bugToDelete: Bug | null = null;
-
+  // Load bugs
   loadBugs(): void {
     this.loading = true;
     this.errorMessage = '';
@@ -72,28 +93,48 @@ export class Dashboard implements OnInit {
       },
       error: (error) => {
         console.error('Failed to load bugs:', error);
-        this.errorMessage = 'Unable to load bugs. Please check whether the backend is running.';
+        this.errorMessage =
+          'Unable to load bugs. Please check whether the backend is running.';
         this.loading = false;
       }
     });
   }
 
+  // Open create form
   openCreateForm(): void {
     this.formError = '';
+    this.editingBugId = null;
+
+    this.bugForm.reset({
+      title: '',
+      description: '',
+      severity: 'MEDIUM',
+      status: 'OPEN',
+      assignee: ''
+    });
+
+    this.clearAiResult();
     this.showCreateForm = true;
   }
 
+  // Close create/edit form
   closeCreateForm(): void {
-  this.showCreateForm = false;
-  this.editingBugId = null;
-  this.bugForm.reset({
-    title: '',
-    description: '',
-    severity: 'MEDIUM',
-    status: 'OPEN'
-  });
+    this.showCreateForm = false;
+    this.editingBugId = null;
+    this.formError = '';
+
+    this.bugForm.reset({
+      title: '',
+      description: '',
+      severity: 'MEDIUM',
+      status: 'OPEN',
+      assignee: ''
+    });
+
+    this.clearAiResult();
   }
 
+  // Create bug
   submitBug(): void {
     if (this.bugForm.invalid || this.saving) {
       this.bugForm.markAllAsTouched();
@@ -117,235 +158,334 @@ export class Dashboard implements OnInit {
     });
   }
 
-
-get totalBugs(): number {
-  return this.bugs.length;
-}
-
-get openBugs(): number {
-  return this.bugs.filter(
-    bug => bug.status === 'OPEN'
-  ).length;
-}
-
-get inProgressBugs(): number {
-  return this.bugs.filter(
-    bug => bug.status === 'IN_PROGRESS'
-  ).length;
-}
-
-get resolvedBugs(): number {
-  return this.bugs.filter(
-    bug => bug.status === 'RESOLVED'
-  ).length;
-}
-
-editingBugId: number | null = null;
-
-editBug(bug: Bug): void {
-
-  if (bug.id == null) {
-    return;
-  }
-
-  this.editingBugId = bug.id;
-  this.formError = '';
-
-  this.bugForm.patchValue({
-    title: bug.title,
-    description: bug.description,
-    severity: bug.severity,
-    status: bug.status,
-    assignee: bug.assignee ?? ''
-  });
-
-  this.showCreateForm = true;
-}
-
-saveBug(): void {
-  if (this.bugForm.invalid || this.saving) {
-    this.bugForm.markAllAsTouched();
-    return;
-  }
-
-  if (this.editingBugId === null) {
-    this.submitBug();
-    return;
-  }
-
-  this.saving = true;
-  this.formError = '';
-
-  const id = this.editingBugId;
-  const updatedBug = this.bugForm.getRawValue();
-
-  this.bugService.updateBug(id, updatedBug).subscribe({
-    next: () => {
-      this.saving = false;
-      this.closeCreateForm();
-      this.editingBugId = null;
-      this.loadBugs();
-    },
-    error: (error) => {
-      console.error('Failed to update bug:', error);
-      this.saving = false;
-      this.formError = 'Unable to update the bug. Please try again.';
+  // Save either a new bug or an edited bug
+  saveBug(): void {
+    if (this.bugForm.invalid || this.saving) {
+      this.bugForm.markAllAsTouched();
+      return;
     }
-  });
-  }
 
-
-openDeleteDialog(bug: Bug): void {
-  if (bug.id == null) {
-    return;
-  }
-
-  this.bugToDelete = bug;
-  this.showDeleteDialog = true;
-}
-
-closeDeleteDialog(): void {
-  this.showDeleteDialog = false;
-  this.bugToDelete = null;
-}
-
-confirmDeleteBug(): void {
-  if (this.bugToDelete?.id == null) {
-    return;
-  }
-
-  const id = this.bugToDelete.id;
-
-  this.bugService.deleteBug(id).subscribe({
-    next: () => {
-      this.closeDeleteDialog();
-      this.loadBugs();
-    },
-    error: (error) => {
-      console.error('Failed to delete bug:', error);
-      this.closeDeleteDialog();
-      this.errorMessage = 'Unable to delete the bug. Please try again.';
+    if (this.editingBugId === null) {
+      this.submitBug();
+      return;
     }
-  });
+
+    this.saving = true;
+    this.formError = '';
+
+    const id = this.editingBugId;
+    const updatedBug = this.bugForm.getRawValue();
+
+    this.bugService.updateBug(id, updatedBug).subscribe({
+      next: () => {
+        this.saving = false;
+        this.closeCreateForm();
+        this.loadBugs();
+      },
+      error: (error) => {
+        console.error('Failed to update bug:', error);
+        this.saving = false;
+        this.formError = 'Unable to update the bug. Please try again.';
+      }
+    });
   }
 
-  applyFilters(): void {
-  const search = this.searchText.trim().toLowerCase();
+  // Edit bug
+  editBug(bug: Bug): void {
+    if (bug.id == null) {
+      return;
+    }
 
-  this.filteredBugs = this.bugs.filter(bug => {
-    const matchesSearch =
-      !search ||
-      String(bug.id ?? '').includes(search) ||
-      bug.title.toLowerCase().includes(search) ||
-      bug.description.toLowerCase().includes(search);
+    this.editingBugId = bug.id;
+    this.formError = '';
 
-    const matchesStatus =
-      !this.selectedStatus ||
-      bug.status === this.selectedStatus;
+    this.clearAiResult();
 
-    const matchesSeverity =
-      !this.selectedSeverity ||
-      bug.severity === this.selectedSeverity;
+    this.bugForm.patchValue({
+      title: bug.title,
+      description: bug.description,
+      severity: bug.severity,
+      status: bug.status,
+      assignee: bug.assignee ?? ''
+    });
 
-    const matchesAssignee =
-      !this.selectedAssignee ||
-      (bug.assignee ?? '') === this.selectedAssignee;
+    this.showCreateForm = true;
+  }
 
-    return (
-      matchesSearch &&
-      matchesStatus &&
-      matchesSeverity &&
-      matchesAssignee
-    );
-  });
-}
+  // Dashboard statistics
+  get totalBugs(): number {
+    return this.bugs.length;
+  }
 
-  resetFilters(): void {
-  this.searchText = '';
-  this.selectedStatus = '';
-  this.selectedSeverity = '';
-  this.selectedAssignee = '';
+  get openBugs(): number {
+    return this.bugs.filter(bug => bug.status === 'OPEN').length;
+  }
 
-  this.applyFilters();
-}
+  get inProgressBugs(): number {
+    return this.bugs.filter(bug => bug.status === 'IN_PROGRESS').length;
+  }
+
+  get resolvedBugs(): number {
+    return this.bugs.filter(bug => bug.status === 'RESOLVED').length;
+  }
 
   get unassignedBugs(): number {
-  return this.bugs.filter(
-    bug => !bug.assignee || bug.assignee.trim() === ''
-  ).length;
-}
-
-analyzeBugWithAI(): void {
-  const description = this.aiDescription.trim();
-
-  if (!description || this.aiLoading) {
-    return;
+    return this.bugs.filter(
+      bug => !bug.assignee || bug.assignee.trim() === ''
+    ).length;
   }
 
-  this.aiLoading = true;
-  this.aiAnalysis = '';
-  this.aiError = '';
-
-  this.aiService.analyzeBug(description).subscribe({
-    next: (result) => {
-      this.aiAnalysis = result.analysis;
-      this.formatAiAnalysis(result.analysis);
-      this.aiLoading = false;
-    },
-    error: (error) => {
-      console.error('AI analysis failed:', error);
-      this.aiError = 'Unable to analyze the bug. Please check that the backend and Ollama are running.';
-      this.aiLoading = false;
+  // Delete bug
+  openDeleteDialog(bug: Bug): void {
+    if (bug.id == null) {
+      return;
     }
-  });
+
+    this.bugToDelete = bug;
+    this.showDeleteDialog = true;
   }
 
+  closeDeleteDialog(): void {
+    this.showDeleteDialog = false;
+    this.bugToDelete = null;
+  }
 
-formatAiAnalysis(analysis: string): void {
-  this.aiCategory = '';
-  this.aiSeverity = '';
-  this.aiSummary = '';
-  this.aiDebuggingSteps = [];
+  confirmDeleteBug(): void {
+    if (this.bugToDelete?.id == null) {
+      return;
+    }
 
-  const categoryMatch = analysis.match(
-    /Category:\s*([\s\S]*?)(?=\s*\d*[.)]?\s*Suggested severity:|$)/i
-  );
+    const id = this.bugToDelete.id;
 
-  const severityMatch = analysis.match(
-    /Suggested severity:\s*([\s\S]*?)(?=\s*\d*[.)]?\s*(?:A one-sentence summary|One-sentence summary):|$)/i
-  );
+    this.bugService.deleteBug(id).subscribe({
+      next: () => {
+        this.closeDeleteDialog();
+        this.loadBugs();
+      },
+      error: (error) => {
+        console.error('Failed to delete bug:', error);
+        this.closeDeleteDialog();
+        this.errorMessage = 'Unable to delete the bug. Please try again.';
+      }
+    });
+  }
 
-  const summaryMatch = analysis.match(
-    /(?:A one-sentence summary|One-sentence summary):\s*([\s\S]*?)(?=\s*\d*[.)]?\s*Three debugging steps:|$)/i
-  );
+  // Search and filters
+  applyFilters(): void {
+    const search = this.searchText.trim().toLowerCase();
 
-  const stepsMatch = analysis.match(
-    /Three debugging steps:\s*([\s\S]*)/i
-  );
+    this.filteredBugs = this.bugs.filter(bug => {
+      const matchesSearch =
+        !search ||
+        String(bug.id ?? '').includes(search) ||
+        bug.title.toLowerCase().includes(search) ||
+        bug.description.toLowerCase().includes(search);
 
-  this.aiCategory = categoryMatch?.[1]
-    ?.replace(/\s+/g, ' ')
-    .replace(/\s*\d+[.)]\s*$/, '')
-    .trim() ?? '';
+      const matchesStatus =
+        !this.selectedStatus ||
+        bug.status === this.selectedStatus;
 
-  this.aiSeverity = severityMatch?.[1]
-    ?.replace(/\s+/g, ' ')
-    .replace(/\s*\d+[.)]\s*$/, '')
-    .trim() ?? '';
+      const matchesSeverity =
+        !this.selectedSeverity ||
+        bug.severity === this.selectedSeverity;
 
-  this.aiSummary = summaryMatch?.[1]
-    ?.replace(/\s+/g, ' ')
-    .trim() ?? '';
+      const matchesAssignee =
+        !this.selectedAssignee ||
+        (bug.assignee ?? '') === this.selectedAssignee;
 
-  if (stepsMatch?.[1]) {
-    this.aiDebuggingSteps = stepsMatch[1]
-      .split(/(?:^|\s)\d+[.)]\s*/)
-      .map(step => step.trim())
-      .filter(Boolean)
-      .map(step => step.replace(/\s+/g, ' '));
+      return (
+        matchesSearch &&
+        matchesStatus &&
+        matchesSeverity &&
+        matchesAssignee
+      );
+    });
+  }
+
+  // Reset filters
+  resetFilters(): void {
+    this.searchText = '';
+    this.selectedStatus = '';
+    this.selectedSeverity = '';
+    this.selectedAssignee = '';
+
+    this.applyFilters();
+  }
+
+  // Analyze description from Create/Edit form
+  analyzeFormDescription(): void {
+    const description =
+      this.bugForm.controls.description.value.trim();
+
+    this.analyzeDescription(description);
+  }
+
+  // Analyze description from standalone AI Assistant
+  analyzeBugWithAI(): void {
+    const description = this.aiDescription.trim();
+
+    this.analyzeDescription(description);
+  }
+
+  // Common AI analysis method
+  private analyzeDescription(description: string): void {
+    if (!description || this.aiLoading) {
+      return;
+    }
+
+    this.aiLoading = true;
+    this.aiAnalysis = '';
+    this.aiError = '';
+
+    this.aiCategory = '';
+    this.aiSeverity = '';
+    this.aiSummary = '';
+    this.aiDebuggingSteps = [];
+
+    this.aiService.analyzeBug(description).subscribe({
+      next: (result) => {
+        this.aiAnalysis = result.analysis;
+        this.formatAiAnalysis(result.analysis);
+        this.aiLoading = false;
+      },
+      error: (error) => {
+        console.error('AI analysis failed:', error);
+
+        this.aiError =
+          'Unable to analyze the bug. Please check that the AI service is available and try again.';
+
+        this.aiLoading = false;
+      }
+    });
+  }
+
+  // Reset AI result
+  private clearAiResult(): void {
+    this.aiAnalysis = '';
+    this.aiError = '';
+    this.aiCategory = '';
+    this.aiSeverity = '';
+    this.aiSummary = '';
+    this.aiDebuggingSteps = [];
+  }
+
+  // Format and extract AI response
+  formatAiAnalysis(analysis: string): void {
+    this.aiCategory = '';
+    this.aiSeverity = '';
+    this.aiSummary = '';
+    this.aiDebuggingSteps = [];
+
+    // Remove Markdown formatting
+    const cleanText = analysis
+      .replace(/\*\*/g, '')
+      .replace(/#{1,6}\s*/g, '')
+      .replace(/\r/g, '')
+      .trim();
+
+    const lines = cleanText
+      .split('\n')
+      .map(line => line.trim())
+      .filter(Boolean);
+
+    type Section =
+      | 'category'
+      | 'severity'
+      | 'summary'
+      | 'steps'
+      | null;
+
+    let currentSection: Section = null;
+
+    const sections: Record<string, string[]> = {
+      category: [],
+      severity: [],
+      summary: [],
+      steps: []
+    };
+
+    // Identify section headings and collect their content
+    for (const line of lines) {
+      const headingLine = line.replace(/^[-*•]\s*/, '').trim();
+
+      const headingMatch = headingLine.match(
+        /^(?:\d+[.)]\s*)?(category|suggested severity|severity|a one-sentence summary|one-sentence summary|summary|suggested debugging steps|three debugging steps|debugging steps)\s*:?\s*(.*)$/i
+      );
+
+      if (headingMatch) {
+        const heading = headingMatch[1].toLowerCase();
+        const content = headingMatch[2].trim();
+
+        if (heading === 'category') {
+          currentSection = 'category';
+        } else if (
+          heading === 'suggested severity' ||
+          heading === 'severity'
+        ) {
+          currentSection = 'severity';
+        } else if (
+          heading === 'a one-sentence summary' ||
+          heading === 'one-sentence summary' ||
+          heading === 'summary'
+        ) {
+          currentSection = 'summary';
+        } else {
+          currentSection = 'steps';
+        }
+
+        if (content) {
+          sections[currentSection].push(content);
+        }
+
+        continue;
+      }
+
+      if (currentSection) {
+        sections[currentSection].push(line);
+      }
+    }
+
+    // Extract category
+    this.aiCategory = this.cleanAiValue(
+      sections['category'].join(' ')
+    );
+
+    // Extract only the severity label
+    const severityText = sections['severity'].join(' ');
+
+    const severityMatch = severityText.match(
+      /\b(Critical|High|Medium|Low)\b/i
+    );
+
+    if (severityMatch) {
+      this.aiSeverity =
+        severityMatch[1].charAt(0).toUpperCase() +
+        severityMatch[1].slice(1).toLowerCase();
+    }
+
+    // Extract summary
+    this.aiSummary = this.cleanAiValue(
+      sections['summary'].join(' ')
+    );
+
+    // Extract debugging steps
+    this.aiDebuggingSteps = sections['steps']
+      .map(step =>
+        step
+          .replace(/^\s*[-*•]\s*/, '')
+          .replace(/^\s*\d+[.)]\s*/, '')
+          .replace(/^\s*Step\s+\d+\s*:\s*/i, '')
+          .trim()
+      )
+      .filter(Boolean);
+  }
+
+  // Clean AI text
+  private cleanAiValue(value: string): string {
+    return value
+      .replace(/\*\*/g, '')
+      .replace(/^\s*[-*•]\s*/, '')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 }
-
-
-}
-
